@@ -1,5 +1,6 @@
 ---
-- hosts: all
+- name: Applying roles to install and configure PGSQL on server
+  hosts: all
   become: yes
   vars:
     postgresql_version: "{{ postgresql_version }}"
@@ -22,3 +23,11 @@
         login_host: "{{ hostvars[groups['all'][0]]['ansible_host'] }}"
       delegate_to: "{{ second_server_ip }}"
       run_once: yes
+
+- name: Final message
+  hosts: localhost
+  become: no
+  tasks:
+    - name: Playbook finished
+      debug:
+        msg: "Плейбук завершен.  PostgreSQL настроен."

@@ -90,4 +90,4 @@ EOF
 echo "Внимание! Создан inventory файл для ansible ${INVENTORY_FILE}"
 
 # Запуск Ansible-плейбука с использованием inventory.yml
-ansible-playbook -i "$INVENTORY_FILE" "$ANSIBLE_PLAYBOOK" -e "postgresql_version=14 second_server_ip=$SECOND_SERVER_IP"
+ansible-playbook -i "$INVENTORY_FILE" "$ANSIBLE_PLAYBOOK" -e "postgresql_version=14" -e "second_server_ip=$SECOND_SERVER_IP"
