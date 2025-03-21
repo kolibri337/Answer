@@ -66,6 +66,16 @@ done
 # Вывод информации о сервере для дальнейшей работы
 echo "Наименее загруженным сервером является ${TARGET_SERVER}, выполним установку и настройку PostgreSQL на нём"
 
+
+# Определяем IP второго сервера
+SECOND_SERVER_IP=""
+for server in "${SERVERS[@]}"; do
+    if [ "$server" != "$TARGET_SERVER" ]; then
+        SECOND_SERVER_IP="$server"
+        break
+    fi
+done
+
 # Создаем файл inventory с выбранным сервером и ключом
 cat <<EOF > "$INVENTORY_FILE"
 all:
@@ -80,4 +90,4 @@ EOF
 echo "Внимание! Создан inventory файл для ansible ${INVENTORY_FILE}"
 
 # Запуск Ansible-плейбука с использованием inventory.yml
-ansible-playbook -i "$INVENTORY_FILE" "$ANSIBLE_PLAYBOOK"
+ansible-playbook -i "$INVENTORY_FILE" "$ANSIBLE_PLAYBOOK" -e "postgresql_version=14 second_server_ip=$SECOND_SERVER_IP"

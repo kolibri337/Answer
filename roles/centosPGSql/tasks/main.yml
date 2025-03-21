@@ -1,0 +1,47 @@
+---
+- name: Install PostgreSQL {{ postgresql_version }} repository
+  yum:
+    name: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+    state: present
+
+- name: Install PostgreSQL {{ postgresql_version }}
+  yum:
+    name: "postgresql{{ postgresql_version }}-server"
+    state: present
+  tags: install
+
+- name: Initialize PostgreSQL database
+  command: "/usr/pgsql-{{ postgresql_version }}/bin/postgresql-{{ postgresql_version }}-setup initdb"
+  tags: init
+
+- name: Ensure PostgreSQL service is started and enabled
+  service:
+    name: "postgresql-{{ postgresql_version }}"
+    state: started
+    enabled: yes
+  tags: service
+
+- name: Configure PostgreSQL to accept external connections
+  template:
+    src: pg_hba.conf.j2
+    dest: "/var/lib/pgsql/{{ postgresql_version }}/data/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: '0640'
+  notify: Restart PostgreSQL
+  tags: config
+
+- name: Create user student
+  postgresql_user:
+    name: student
+    password: "student_password"
+    role_attr_flags: "LOGIN"
+  tags: user
+
+- name: Configure user student to connect only from the second server
+  lineinfile:
+    path: "/var/lib/pgsql/{{ postgresql_version }}/data/pg_hba.conf"
+    line: "host all student {{ second_server_ip }}/32 md5"
+    insertafter: EOF
+  notify: Restart PostgreSQL
+  tags: config

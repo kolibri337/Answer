@@ -1,0 +1,51 @@
+---
+- name: Add PostgreSQL APT repository
+  apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    state: present
+    filename: postgresql
+    update_cache: yes
+
+- name: Install PostgreSQL {{ postgresql_version }}
+  apt:
+    name: "postgresql-{{ postgresql_version }}"
+    state: present
+  tags: install
+
+- name: Install PostgreSQL contrib package
+  apt:
+    name: "postgresql-contrib-{{ postgresql_version }}"
+    state: present
+  tags: install
+
+- name: Ensure PostgreSQL service is started and enabled
+  service:
+    name: "postgresql"
+    state: started
+    enabled: yes
+  tags: service
+
+- name: Configure PostgreSQL to accept external connections
+  template:
+    src: pg_hba.conf.j2
+    dest: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: '0640'
+  notify: Restart PostgreSQL
+  tags: config
+
+- name: Create user student
+  postgresql_user:
+    name: student
+    password: "student_password"
+    role_attr_flags: "LOGIN"
+  tags: user
+
+- name: Configure user student to connect only from the second server
+  lineinfile:
+    path: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+    line: "host all student {{ second_server_ip }}/32 md5"
+    insertafter: EOF
+  notify: Restart PostgreSQL
+  tags: config

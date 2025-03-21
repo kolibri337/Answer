@@ -1,0 +1,24 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    postgresql_version: "{{ postgresql_version }}"
+    second_server_ip: "{{ second_server_ip }}"
+  roles:
+    - role: debianPGSql
+      when: ansible_os_family == "Debian"
+    - role: centosPGSql
+      when: ansible_os_family == "RedHat"
+
+- name: Check PostgreSQL connection from the second server
+  hosts: localhost
+  become: no
+  tasks:
+    - name: Ensure PostgreSQL is accessible from the second server
+      postgresql_query:
+        query: "SELECT 1"
+        login_user: student
+        login_password: student_password
+        login_host: "{{ hostvars[groups['all'][0]]['ansible_host'] }}"
+      delegate_to: "{{ second_server_ip }}"
+      run_once: yes
