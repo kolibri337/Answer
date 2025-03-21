@@ -23,11 +23,12 @@
         login_host: "{{ hostvars[groups['all'][0]]['ansible_host'] }}"
       delegate_to: "{{ second_server_ip }}"
       run_once: yes
+      register: postgresql_check
 
-- name: Final message
-  hosts: localhost
-  become: no
-  tasks:
-    - name: Playbook finished
+    - name: Отображение статуса подключения
       debug:
-        msg: "Плейбук завершен.  PostgreSQL настроен."
+        msg: "Проверка подключения к PostgreSQL: {{ 'Успешно' if postgresql_check.success else 'Ошибка' }}"
+
+    - name: Завершение работы плейбука
+      debug:
+        msg: "Работа плейбука завершена."
